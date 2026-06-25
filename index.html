@@ -631,6 +631,28 @@
     border: 1px dashed var(--border2); transition: background 0.1s, color 0.1s;
   }
   .dp-empty-badge:hover { background: var(--surface2); color: var(--text); }
+
+  /* ─── Date Picker Popup ──────────────────────────────── */
+  #datePopup {
+    position: fixed;
+    z-index: 500;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    width: 224px;
+    animation: modalIn 0.12s ease;
+  }
+  .date-clk-cell {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin: -1px -4px;
+    transition: background 0.1s;
+  }
+  .date-clk-cell:hover { background: var(--surface2); }
 </style>
 </head>
 <body>
@@ -975,6 +997,21 @@
   </div>
 </div>
 
+<!-- Date Picker Popup -->
+<div id="datePopup" style="display:none">
+  <div class="dp-hdr">
+    <span id="datePopupTitle"></span>
+    <button onclick="closeDatePopup()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div style="padding:12px 12px 10px">
+    <input type="date" id="datePopupInput" style="width:100%">
+    <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:10px">
+      <button class="btn" style="height:30px;font-size:12px;padding:0 12px" onclick="clearDateValue()">Clear</button>
+      <button class="btn btn-primary" style="height:30px;font-size:12px;padding:0 12px" onclick="confirmDatePopup()"><i class="fa-solid fa-check"></i> Set</button>
+    </div>
+  </div>
+</div>
+
 <!-- Dropdown Popup -->
 <div id="dpPopup" style="display:none">
   <div class="dp-hdr">
@@ -1098,6 +1135,16 @@ function targetDateCell(t) {
   if (diff < 0)  return `<span class="target-date target-past">${label} <i class="fa-solid fa-circle-exclamation" style="font-size:10px"></i></span>`;
   if (diff <= 3) return `<span class="target-date target-soon">${label} (${diff === 0 ? 'today' : diff + 'd'})</span>`;
   return `<span class="target-date target-ok">${label}</span>`;
+}
+
+function clickableDateCell(field, rowId, value) {
+  if (!value) {
+    return `<span class="dp-empty-badge" onclick="openDatePopup(${JSON.stringify(field)},${rowId},this)"><i class="fa-regular fa-calendar" style="font-size:10px"></i> —</span>`;
+  }
+  const inner = field === 'date'
+    ? `<span style="white-space:nowrap;color:var(--text2);font-size:12px">${formatDate(value)}</span>`
+    : targetDateCell(value);
+  return `<span class="date-clk-cell" onclick="openDatePopup(${JSON.stringify(field)},${rowId},this)">${inner}</span>`;
 }
 
 const PRIO_ORDER = { 'High':0, 'Medium':1, 'Low':2, '':3 };
@@ -1252,7 +1299,7 @@ function render() {
     return `<tr>
       <td class="col-company">${esc(r.company)}<span>${esc(r.industry||'')}</span></td>
       <td>${badgeHtml('type', r.type, r.id)}</td>
-      <td style="white-space:nowrap;color:var(--text2);font-size:12px">${r.date ? formatDate(r.date) : '<span style="color:var(--text3)">—</span>'}</td>
+      <td>${clickableDateCell('date', r.id, r.date)}</td>
       <td>${r.date ? daysCell(days) : '<span class="days-cell days-ok">—</span>'}</td>
       <td>${badgeHtml('status', r.status, r.id)}</td>
       <td style="color:var(--text2)">${esc(r.pic||'—')}</td>
@@ -1261,7 +1308,7 @@ function render() {
       <td>${badgeHtml('priority', r.priority, r.id)}</td>
       <td class="col-wrap" style="color:var(--text3)">${esc(r.industry||'—')}</td>
       <td>${noteHtml}</td>
-      <td>${targetDateCell(r.target)}</td>
+      <td>${clickableDateCell('target', r.id, r.target)}</td>
       <td>
         <div class="action-cell">
           <button class="icon-btn" onclick="openModal(${r.id})" title="Edit entry"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -1299,7 +1346,7 @@ function renderRawTable(rawList, search, fPrio) {
     return;
   }
   tbody.innerHTML = rows.map(r => {
-    const reachHtml = r.reach ? targetDateCell(r.reach) : '<span style="color:var(--text3)">—</span>';
+    const reachHtml = clickableDateCell('reach', r.id, r.reach);
     const noteHtml = r.notes
       ? `<div class="note-cell" onclick="openRawNote(${r.id})" title="Click to expand">${esc(r.notes)}</div>`
       : `<span class="note-empty">—</span>`;
@@ -1625,6 +1672,52 @@ function handleNoteOverlayClick(e) {
   if (e.target === document.getElementById('noteOverlay')) closeNoteModal();
 }
 
+// ─── Date Picker Popup ───────────────────────────────────────
+let datePopState = { field: null, rowId: null };
+
+function openDatePopup(field, rowId, triggerEl) {
+  closeDatePopup();
+  datePopState = { field, rowId };
+  const titles = { date: 'Last Action Date', target: 'Target Date', reach: 'Planned Reach Out' };
+  document.getElementById('datePopupTitle').textContent = titles[field] || field;
+  const row = data.find(d => d.id === rowId);
+  document.getElementById('datePopupInput').value = (row && row[field]) || '';
+  const popup = document.getElementById('datePopup');
+  popup.style.display = 'block';
+  const rect = triggerEl.getBoundingClientRect();
+  let top = rect.bottom + 6, left = rect.left;
+  if (left + 224 > window.innerWidth - 8) left = window.innerWidth - 232;
+  if (top + 130 > window.innerHeight - 8) top = rect.top - 6 - (popup.offsetHeight || 120);
+  popup.style.top = Math.max(8, top) + 'px';
+  popup.style.left = Math.max(8, left) + 'px';
+  setTimeout(() => document.addEventListener('click', dateOutsideClick), 0);
+}
+
+function dateOutsideClick(e) {
+  if (!document.getElementById('datePopup').contains(e.target)) closeDatePopup();
+}
+
+function closeDatePopup() {
+  document.getElementById('datePopup').style.display = 'none';
+  document.removeEventListener('click', dateOutsideClick);
+  datePopState = { field: null, rowId: null };
+}
+
+function confirmDatePopup() {
+  const { field, rowId } = datePopState;
+  const i = data.findIndex(d => d.id === rowId);
+  if (i < 0) return;
+  data[i] = { ...data[i], [field]: document.getElementById('datePopupInput').value };
+  saveEntry_firebase(data[i]);
+  closeDatePopup();
+  render();
+}
+
+function clearDateValue() {
+  document.getElementById('datePopupInput').value = '';
+  confirmDatePopup();
+}
+
 // ─── Dropdown Popup ───────────────────────────────────────────
 let dpState = { field: null, rowId: null };
 
@@ -1756,7 +1849,7 @@ function confirmDpAdd() {
 
 // ─── Keyboard ─────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeNoteModal(); closeRawModal(); closeHoldModal(); closeDpPopup(); }
+  if (e.key === 'Escape') { closeModal(); closeNoteModal(); closeRawModal(); closeHoldModal(); closeDpPopup(); closeDatePopup(); }
 });
 
 // ─── Listeners ───────────────────────────────────────────────
@@ -1795,6 +1888,10 @@ window.closeNoteModal   = closeNoteModal;
 window.handleNoteOverlayClick = handleNoteOverlayClick;
 window.switchTab        = switchTab;
 window.sortBy           = sortBy;
+window.openDatePopup    = openDatePopup;
+window.closeDatePopup   = closeDatePopup;
+window.confirmDatePopup = confirmDatePopup;
+window.clearDateValue   = clearDateValue;
 window.openDpPopup      = openDpPopup;
 window.closeDpPopup     = closeDpPopup;
 window.selectDpOpt      = selectDpOpt;
