@@ -638,18 +638,18 @@
       <table id="mainTable">
         <thead>
           <tr>
-            <th onclick="sortBy('company')">Company <i class="fa-solid fa-sort" style="opacity:.4;font-size:10px"></i></th>
-            <th>Type</th>
-            <th onclick="sortBy('date')">Last Action <i class="fa-solid fa-sort" style="opacity:.4;font-size:10px"></i></th>
-            <th>Since</th>
-            <th>Status</th>
-            <th>PIC</th>
-            <th>Sourcing</th>
-            <th>Product</th>
-            <th onclick="sortBy('priority')">Priority <i class="fa-solid fa-sort" style="opacity:.4;font-size:10px"></i></th>
-            <th>Industry</th>
-            <th style="min-width:180px">Next Actions</th>
-            <th onclick="sortBy('target')" style="min-width:120px">Target Date <i class="fa-solid fa-sort" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="company" onclick="sortBy('company')">Company <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="type" onclick="sortBy('type')">Type <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="date" onclick="sortBy('date')">Last Action <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="since" onclick="sortBy('since')">Since <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="status" onclick="sortBy('status')">Status <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="pic" onclick="sortBy('pic')">PIC <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="sourcing" onclick="sortBy('sourcing')">Sourcing <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="product" onclick="sortBy('product')">Product <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="priority" onclick="sortBy('priority')">Priority <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="industry" onclick="sortBy('industry')">Industry <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="notes" onclick="sortBy('notes')" style="min-width:180px">Next Actions <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="target" onclick="sortBy('target')" style="min-width:120px">Target Date <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
             <th></th>
           </tr>
         </thead>
@@ -659,13 +659,13 @@
       <table id="rawTable" style="display:none;min-width:900px">
         <thead>
           <tr>
-            <th onclick="sortBy('company')">Company <i class="fa-solid fa-sort" style="opacity:.4;font-size:10px"></i></th>
-            <th>Type</th>
-            <th onclick="sortBy('reach')" style="min-width:140px">Planned Reach Out <i class="fa-solid fa-sort" style="opacity:.4;font-size:10px"></i></th>
-            <th>Industry</th>
-            <th>Sourcing</th>
-            <th onclick="sortBy('priority')">Priority <i class="fa-solid fa-sort" style="opacity:.4;font-size:10px"></i></th>
-            <th style="min-width:200px">Notes</th>
+            <th data-sort="company" onclick="sortBy('company')">Company <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="type" onclick="sortBy('type')">Type <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="reach" onclick="sortBy('reach')" style="min-width:140px">Planned Reach Out <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="industry" onclick="sortBy('industry')">Industry <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="sourcing" onclick="sortBy('sourcing')">Sourcing <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="priority" onclick="sortBy('priority')">Priority <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="notes" onclick="sortBy('notes')" style="min-width:200px">Notes <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
             <th></th>
           </tr>
         </thead>
@@ -675,10 +675,10 @@
       <table id="holdTable" style="display:none;min-width:750px">
         <thead>
           <tr>
-            <th onclick="sortBy('company')">Company <i class="fa-solid fa-sort" style="opacity:.4;font-size:10px"></i></th>
-            <th>Type</th>
-            <th style="min-width:160px">Product Offered</th>
-            <th style="min-width:260px">Reason for Rejection / Hold</th>
+            <th data-sort="company" onclick="sortBy('company')">Company <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="type" onclick="sortBy('type')">Type <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="product" onclick="sortBy('product')" style="min-width:160px">Product Offered <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
+            <th data-sort="reason" onclick="sortBy('reason')" style="min-width:260px">Reason for Rejection / Hold <i class="fa-solid fa-sort sort-icon" style="opacity:.4;font-size:10px"></i></th>
             <th></th>
           </tr>
         </thead>
@@ -1075,9 +1075,16 @@ function render() {
       const diff = (PRIO_ORDER[a.priority]??3) - (PRIO_ORDER[b.priority]??3);
       return diff !== 0 ? diff * sortDir : new Date(b.date) - new Date(a.date);
     }
-    if (sortKey === 'company') return a.company.localeCompare(b.company) * sortDir;
-    if (sortKey === 'date')    return (new Date(b.date) - new Date(a.date)) * sortDir;
-    if (sortKey === 'target')  return ((a.target||'9999') < (b.target||'9999') ? -1 : 1) * sortDir;
+    if (sortKey === 'company')  return (a.company||'').localeCompare(b.company||'') * sortDir;
+    if (sortKey === 'date' || sortKey === 'since') return (new Date(b.date||0) - new Date(a.date||0)) * sortDir;
+    if (sortKey === 'target')   return ((a.target||'9999') < (b.target||'9999') ? -1 : 1) * sortDir;
+    if (sortKey === 'type')     return (a.type||'').localeCompare(b.type||'') * sortDir;
+    if (sortKey === 'status')   return (a.status||'').localeCompare(b.status||'') * sortDir;
+    if (sortKey === 'pic')      return (a.pic||'').localeCompare(b.pic||'') * sortDir;
+    if (sortKey === 'sourcing') return (a.sourcing||'').localeCompare(b.sourcing||'') * sortDir;
+    if (sortKey === 'product')  return (a.product||'').localeCompare(b.product||'') * sortDir;
+    if (sortKey === 'industry') return (a.industry||'').localeCompare(b.industry||'') * sortDir;
+    if (sortKey === 'notes')    return (a.notes||'').localeCompare(b.notes||'') * sortDir;
     return 0;
   });
 
@@ -1086,11 +1093,12 @@ function render() {
 
   const tbody = document.getElementById('tbody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state">
       <i class="fa-solid fa-inbox"></i>
       <p>No entries found</p>
       <span>Try adjusting your filters or add a new prospect</span>
     </div></td></tr>`;
+    updateSortIcons();
     return;
   }
 
@@ -1124,6 +1132,7 @@ function render() {
       </td>
     </tr>`;
   }).join('');
+  updateSortIcons();
 }
 
 function renderRawTable(rawList, search, fPrio) {
@@ -1135,8 +1144,12 @@ function renderRawTable(rawList, search, fPrio) {
       const diff = (PRIO_ORDER[a.priority]??3) - (PRIO_ORDER[b.priority]??3);
       return diff !== 0 ? diff * sortDir : 0;
     }
-    if (sortKey === 'company') return a.company.localeCompare(b.company) * sortDir;
-    if (sortKey === 'reach')   return ((a.reach||'9999') < (b.reach||'9999') ? -1 : 1) * sortDir;
+    if (sortKey === 'company')  return (a.company||'').localeCompare(b.company||'') * sortDir;
+    if (sortKey === 'reach')    return ((a.reach||'9999') < (b.reach||'9999') ? -1 : 1) * sortDir;
+    if (sortKey === 'type')     return (a.type||'').localeCompare(b.type||'') * sortDir;
+    if (sortKey === 'industry') return (a.industry||'').localeCompare(b.industry||'') * sortDir;
+    if (sortKey === 'sourcing') return (a.sourcing||'').localeCompare(b.sourcing||'') * sortDir;
+    if (sortKey === 'notes')    return (a.notes||'').localeCompare(b.notes||'') * sortDir;
     return 0;
   });
   const tbody = document.getElementById('rawTbody');
@@ -1167,6 +1180,7 @@ function renderRawTable(rawList, search, fPrio) {
       </div></td>
     </tr>`;
   }).join('');
+  updateSortIcons();
 }
 
 function openRawModal(id) {
@@ -1229,7 +1243,13 @@ function openRawNote(id) {
 function renderHoldTable(holdList, search) {
   let rows = [...holdList];
   if (search) rows = rows.filter(r => (r.company + r.reason).toLowerCase().includes(search));
-  rows.sort((a,b) => sortKey === 'company' ? a.company.localeCompare(b.company) * sortDir : 0);
+  rows.sort((a,b) => {
+    if (sortKey === 'company') return (a.company||'').localeCompare(b.company||'') * sortDir;
+    if (sortKey === 'type')    return (a.type||'').localeCompare(b.type||'') * sortDir;
+    if (sortKey === 'product') return (a.product||'').localeCompare(b.product||'') * sortDir;
+    if (sortKey === 'reason')  return (a.reason||'').localeCompare(b.reason||'') * sortDir;
+    return 0;
+  });
 
   const tbody = document.getElementById('holdTbody');
   if (!rows.length) {
@@ -1249,6 +1269,7 @@ function renderHoldTable(holdList, search) {
       <button class="icon-btn del" onclick="deleteHoldEntry(${r.id})" title="Delete"><i class="fa-solid fa-trash"></i></button>
     </div></td>
   </tr>`).join('');
+  updateSortIcons();
 }
 
 function openHoldModal(id) {
@@ -1336,6 +1357,24 @@ function populateFilters() {
     statuses.map(s=>`<option value="${esc(s)}"${s===curS?' selected':''}>${esc(s)}</option>`).join('');
   fp.innerHTML = '<option value="">All products</option>' +
     products.map(p=>`<option value="${esc(p)}"${p===curP?' selected':''}>${esc(p)}</option>`).join('');
+}
+
+// ─── Sort icons ───────────────────────────────────────────────
+function updateSortIcons() {
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    const icon = th.querySelector('.sort-icon');
+    if (!icon) return;
+    const key = th.dataset.sort;
+    if (key === sortKey) {
+      icon.className = (sortDir === 1 ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down') + ' sort-icon';
+      icon.style.opacity = '1';
+      icon.style.color = 'var(--accent)';
+    } else {
+      icon.className = 'fa-solid fa-sort sort-icon';
+      icon.style.opacity = '.4';
+      icon.style.color = '';
+    }
+  });
 }
 
 // ─── Tab / Sort ───────────────────────────────────────────────
