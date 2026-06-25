@@ -1139,12 +1139,12 @@ function targetDateCell(t) {
 
 function clickableDateCell(field, rowId, value) {
   if (!value) {
-    return `<span class="dp-empty-badge" onclick="openDatePopup(${JSON.stringify(field)},${rowId},this)"><i class="fa-regular fa-calendar" style="font-size:10px"></i> —</span>`;
+    return `<span class="dp-empty-badge" onclick="openDatePopup('${field}',${rowId},this)"><i class="fa-regular fa-calendar" style="font-size:10px"></i> —</span>`;
   }
   const inner = field === 'date'
     ? `<span style="white-space:nowrap;color:var(--text2);font-size:12px">${formatDate(value)}</span>`
     : targetDateCell(value);
-  return `<span class="date-clk-cell" onclick="openDatePopup(${JSON.stringify(field)},${rowId},this)">${inner}</span>`;
+  return `<span class="date-clk-cell" onclick="openDatePopup('${field}',${rowId},this)">${inner}</span>`;
 }
 
 const PRIO_ORDER = { 'High':0, 'Medium':1, 'Low':2, '':3 };
