@@ -632,6 +632,17 @@
   }
   .dp-empty-badge:hover { background: var(--surface2); color: var(--text); }
 
+  /* ─── Text Edit Popup ────────────────────────────────── */
+  #textPopup {
+    position: fixed;
+    z-index: 500;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    animation: modalIn 0.12s ease;
+  }
+
   /* ─── Date Picker Popup ──────────────────────────────── */
   #datePopup {
     position: fixed;
@@ -643,8 +654,8 @@
     width: 224px;
     animation: modalIn 0.12s ease;
   }
-  .td-date-clk { cursor: pointer; }
-  .td-date-clk:hover { background: #F2F4F8 !important; }
+  .td-date-clk, .td-text-clk { cursor: pointer; }
+  .td-date-clk:hover, .td-text-clk:hover { background: #F2F4F8 !important; }
 </style>
 </head>
 <body>
@@ -989,6 +1000,22 @@
   </div>
 </div>
 
+<!-- Text Edit Popup -->
+<div id="textPopup" style="display:none">
+  <div class="dp-hdr">
+    <span id="textPopupTitle"></span>
+    <button onclick="closeTextPopup()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div style="padding:10px 12px 12px">
+    <input type="text" id="textPopupInput" style="width:100%" onkeydown="if(event.key==='Enter')window.confirmTextPopup()">
+    <textarea id="textPopupTextarea" style="width:100%;display:none;resize:vertical;font-family:inherit;font-size:13px" rows="4" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter')window.confirmTextPopup()"></textarea>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+      <span id="textPopupHint" style="font-size:11px;color:var(--text3)"></span>
+      <button class="btn btn-primary" style="height:30px;font-size:12px;padding:0 12px" onclick="confirmTextPopup()"><i class="fa-solid fa-check"></i> Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Date Picker Popup -->
 <div id="datePopup" style="display:none">
   <div class="dp-hdr">
@@ -1285,21 +1312,21 @@ function render() {
     const days = r.date ? daysSince(r.date) : null;
 
     const noteHtml = r.notes
-      ? `<div class="note-cell" onclick="openNote(${r.id})" title="Click to expand">${esc(r.notes)}</div>`
-      : `<span class="note-empty">No notes</span>`;
+      ? `<div class="note-cell">${esc(r.notes)}</div>`
+      : `<span style="color:var(--text3);font-size:12px">—</span>`;
 
     return `<tr>
-      <td class="col-company">${esc(r.company)}<span>${esc(r.industry||'')}</span></td>
+      <td class="col-company td-text-clk" onclick="openTextPopup('company',${r.id},this)">${esc(r.company)}<span>${esc(r.industry||'')}</span></td>
       <td>${badgeHtml('type', r.type, r.id)}</td>
       <td ${dateTdAttrs('date', r.id)}>${dateTdInner('date', r.date)}</td>
       <td>${r.date ? daysCell(days) : '<span class="days-cell days-ok">—</span>'}</td>
       <td>${badgeHtml('status', r.status, r.id)}</td>
-      <td style="color:var(--text2)">${esc(r.pic||'—')}</td>
-      <td style="color:var(--text3);font-size:12px">${esc(r.sourcing||'—')}</td>
-      <td class="col-wrap">${esc(r.product||'—')}</td>
+      <td class="td-text-clk" onclick="openTextPopup('pic',${r.id},this)" style="color:var(--text2)">${esc(r.pic||'—')}</td>
+      <td class="td-text-clk" onclick="openTextPopup('sourcing',${r.id},this)" style="color:var(--text3);font-size:12px">${esc(r.sourcing||'—')}</td>
+      <td class="col-wrap td-text-clk" onclick="openTextPopup('product',${r.id},this)">${esc(r.product||'—')}</td>
       <td>${badgeHtml('priority', r.priority, r.id)}</td>
-      <td class="col-wrap" style="color:var(--text3)">${esc(r.industry||'—')}</td>
-      <td>${noteHtml}</td>
+      <td class="col-wrap td-text-clk" onclick="openTextPopup('industry',${r.id},this)" style="color:var(--text3)">${esc(r.industry||'—')}</td>
+      <td class="td-text-clk" onclick="openTextPopup('notes',${r.id},this,true)">${noteHtml}</td>
       <td ${dateTdAttrs('target', r.id)}>${dateTdInner('target', r.target)}</td>
       <td>
         <div class="action-cell">
@@ -1340,16 +1367,16 @@ function renderRawTable(rawList, search, fPrio) {
   tbody.innerHTML = rows.map(r => {
     const reachTd = `<td ${dateTdAttrs('reach', r.id)}>${dateTdInner('reach', r.reach)}</td>`;
     const noteHtml = r.notes
-      ? `<div class="note-cell" onclick="openRawNote(${r.id})" title="Click to expand">${esc(r.notes)}</div>`
-      : `<span class="note-empty">—</span>`;
+      ? `<div class="note-cell">${esc(r.notes)}</div>`
+      : `<span style="color:var(--text3);font-size:12px">—</span>`;
     return `<tr>
-      <td class="col-company">${esc(r.company)}</td>
+      <td class="col-company td-text-clk" onclick="openTextPopup('company',${r.id},this)">${esc(r.company)}</td>
       <td>${badgeHtml('type', r.type, r.id)}</td>
       ${reachTd}
-      <td class="col-wrap" style="color:var(--text3)">${esc(r.industry||'—')}</td>
-      <td style="color:var(--text3);font-size:12px">${esc(r.sourcing||'—')}</td>
+      <td class="col-wrap td-text-clk" onclick="openTextPopup('industry',${r.id},this)" style="color:var(--text3)">${esc(r.industry||'—')}</td>
+      <td class="td-text-clk" onclick="openTextPopup('sourcing',${r.id},this)" style="color:var(--text3);font-size:12px">${esc(r.sourcing||'—')}</td>
       <td>${badgeHtml('priority', r.priority, r.id)}</td>
-      <td>${noteHtml}</td>
+      <td class="td-text-clk" onclick="openTextPopup('notes',${r.id},this,true)">${noteHtml}</td>
       <td><div class="action-cell">
         <button class="icon-btn" onclick="openRawModal(${r.id})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
         <button class="icon-btn del" onclick="deleteRawEntry(${r.id})" title="Delete"><i class="fa-solid fa-trash"></i></button>
@@ -1438,10 +1465,10 @@ function renderHoldTable(holdList, search) {
     return;
   }
   tbody.innerHTML = rows.map(r => `<tr>
-    <td class="col-company">${esc(r.company)}</td>
+    <td class="col-company td-text-clk" onclick="openTextPopup('company',${r.id},this)">${esc(r.company)}</td>
     <td>${badgeHtml('type', r.type, r.id)}</td>
-    <td class="col-wrap" style="font-size:12px">${esc(r.product || '—')}</td>
-    <td class="col-wrap" style="color:var(--text2)">${esc(r.reason || '—')}</td>
+    <td class="col-wrap td-text-clk" onclick="openTextPopup('product',${r.id},this)" style="font-size:12px">${esc(r.product || '—')}</td>
+    <td class="col-wrap td-text-clk" onclick="openTextPopup('reason',${r.id},this,true)" style="color:var(--text2)">${esc(r.reason || '—')}</td>
     <td><div class="action-cell">
       <button class="icon-btn" onclick="openHoldModal(${r.id})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
       <button class="icon-btn del" onclick="deleteHoldEntry(${r.id})" title="Delete"><i class="fa-solid fa-trash"></i></button>
@@ -1664,6 +1691,73 @@ function handleNoteOverlayClick(e) {
   if (e.target === document.getElementById('noteOverlay')) closeNoteModal();
 }
 
+// ─── Text Edit Popup ─────────────────────────────────────────
+const TEXT_FIELD_TITLES = {
+  company: 'Company', pic: 'PIC', sourcing: 'Sourcing', product: 'Product',
+  industry: 'Industry', notes: 'Next Actions', reason: 'Reason / Hold', col: 'Notes',
+};
+let textPopState = { field: null, rowId: null, multiline: false };
+
+function openTextPopup(field, rowId, triggerEl, multiline) {
+  closeTextPopup();
+  textPopState = { field, rowId, multiline: !!multiline };
+  document.getElementById('textPopupTitle').textContent = TEXT_FIELD_TITLES[field] || field;
+  const row = data.find(d => d.id === rowId);
+  const value = (row && row[field]) || '';
+  const inp  = document.getElementById('textPopupInput');
+  const ta   = document.getElementById('textPopupTextarea');
+  const hint = document.getElementById('textPopupHint');
+  if (multiline) {
+    inp.style.display = 'none'; ta.style.display = '';
+    ta.value = value;
+    hint.textContent = 'Ctrl+Enter to save';
+  } else {
+    inp.style.display = ''; ta.style.display = 'none';
+    inp.value = value;
+    hint.textContent = '';
+  }
+  const popup = document.getElementById('textPopup');
+  popup.style.display = 'block';
+  const rect = triggerEl.getBoundingClientRect();
+  let top = rect.bottom + 6, left = rect.left;
+  const pw = 280;
+  if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+  const ph = multiline ? 170 : 110;
+  if (top + ph > window.innerHeight - 8) top = rect.top - 6 - ph;
+  popup.style.top  = Math.max(8, top)  + 'px';
+  popup.style.left = Math.max(8, left) + 'px';
+  popup.style.width = pw + 'px';
+  setTimeout(() => {
+    document.addEventListener('click', textOutsideClick);
+    const el = multiline ? ta : inp;
+    el.focus();
+    if (!multiline) inp.select();
+  }, 0);
+}
+
+function textOutsideClick(e) {
+  if (!document.getElementById('textPopup').contains(e.target)) closeTextPopup();
+}
+
+function closeTextPopup() {
+  document.getElementById('textPopup').style.display = 'none';
+  document.removeEventListener('click', textOutsideClick);
+  textPopState = { field: null, rowId: null, multiline: false };
+}
+
+function confirmTextPopup() {
+  const { field, rowId, multiline } = textPopState;
+  const i = data.findIndex(d => d.id === rowId);
+  if (i < 0) return;
+  const value = multiline
+    ? document.getElementById('textPopupTextarea').value.trim()
+    : document.getElementById('textPopupInput').value.trim();
+  data[i] = { ...data[i], [field]: value };
+  saveEntry_firebase(data[i]);
+  closeTextPopup();
+  render();
+}
+
 // ─── Date Picker Popup ───────────────────────────────────────
 let datePopState = { field: null, rowId: null };
 
@@ -1855,7 +1949,7 @@ function confirmDpAdd() {
 
 // ─── Keyboard ─────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeNoteModal(); closeRawModal(); closeHoldModal(); closeDpPopup(); closeDatePopup(); }
+  if (e.key === 'Escape') { closeModal(); closeNoteModal(); closeRawModal(); closeHoldModal(); closeDpPopup(); closeDatePopup(); closeTextPopup(); }
 });
 
 // ─── Listeners ───────────────────────────────────────────────
@@ -1894,6 +1988,9 @@ window.closeNoteModal   = closeNoteModal;
 window.handleNoteOverlayClick = handleNoteOverlayClick;
 window.switchTab        = switchTab;
 window.sortBy           = sortBy;
+window.openTextPopup    = openTextPopup;
+window.closeTextPopup   = closeTextPopup;
+window.confirmTextPopup = confirmTextPopup;
 window.openDatePopup    = openDatePopup;
 window.closeDatePopup   = closeDatePopup;
 window.confirmDatePopup = confirmDatePopup;
