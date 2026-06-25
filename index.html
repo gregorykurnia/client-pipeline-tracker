@@ -643,16 +643,8 @@
     width: 224px;
     animation: modalIn 0.12s ease;
   }
-  .date-clk-cell {
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    border-radius: 4px;
-    padding: 1px 4px;
-    margin: -1px -4px;
-    transition: background 0.1s;
-  }
-  .date-clk-cell:hover { background: var(--surface2); }
+  .td-date-clk { cursor: pointer; }
+  .td-date-clk:hover { background: #F2F4F8 !important; }
 </style>
 </head>
 <body>
@@ -1137,14 +1129,14 @@ function targetDateCell(t) {
   return `<span class="target-date target-ok">${label}</span>`;
 }
 
-function clickableDateCell(field, rowId, value) {
-  if (!value) {
-    return `<span class="dp-empty-badge" onclick="openDatePopup('${field}',${rowId},this)"><i class="fa-regular fa-calendar" style="font-size:10px"></i> —</span>`;
-  }
-  const inner = field === 'date'
-    ? `<span style="white-space:nowrap;color:var(--text2);font-size:12px">${formatDate(value)}</span>`
-    : targetDateCell(value);
-  return `<span class="date-clk-cell" onclick="openDatePopup('${field}',${rowId},this)">${inner}</span>`;
+function dateTdAttrs(field, rowId) {
+  return `class="td-date-clk" onclick="openDatePopup('${field}',${rowId},this)"`;
+}
+
+function dateTdInner(field, value) {
+  if (!value) return `<span style="color:var(--text3);font-size:12px">—</span>`;
+  if (field === 'date') return `<span style="white-space:nowrap;color:var(--text2);font-size:12px">${formatDate(value)}</span>`;
+  return targetDateCell(value);
 }
 
 const PRIO_ORDER = { 'High':0, 'Medium':1, 'Low':2, '':3 };
@@ -1299,7 +1291,7 @@ function render() {
     return `<tr>
       <td class="col-company">${esc(r.company)}<span>${esc(r.industry||'')}</span></td>
       <td>${badgeHtml('type', r.type, r.id)}</td>
-      <td>${clickableDateCell('date', r.id, r.date)}</td>
+      <td ${dateTdAttrs('date', r.id)}>${dateTdInner('date', r.date)}</td>
       <td>${r.date ? daysCell(days) : '<span class="days-cell days-ok">—</span>'}</td>
       <td>${badgeHtml('status', r.status, r.id)}</td>
       <td style="color:var(--text2)">${esc(r.pic||'—')}</td>
@@ -1308,7 +1300,7 @@ function render() {
       <td>${badgeHtml('priority', r.priority, r.id)}</td>
       <td class="col-wrap" style="color:var(--text3)">${esc(r.industry||'—')}</td>
       <td>${noteHtml}</td>
-      <td>${clickableDateCell('target', r.id, r.target)}</td>
+      <td ${dateTdAttrs('target', r.id)}>${dateTdInner('target', r.target)}</td>
       <td>
         <div class="action-cell">
           <button class="icon-btn" onclick="openModal(${r.id})" title="Edit entry"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -1346,14 +1338,14 @@ function renderRawTable(rawList, search, fPrio) {
     return;
   }
   tbody.innerHTML = rows.map(r => {
-    const reachHtml = clickableDateCell('reach', r.id, r.reach);
+    const reachTd = `<td ${dateTdAttrs('reach', r.id)}>${dateTdInner('reach', r.reach)}</td>`;
     const noteHtml = r.notes
       ? `<div class="note-cell" onclick="openRawNote(${r.id})" title="Click to expand">${esc(r.notes)}</div>`
       : `<span class="note-empty">—</span>`;
     return `<tr>
       <td class="col-company">${esc(r.company)}</td>
       <td>${badgeHtml('type', r.type, r.id)}</td>
-      <td>${reachHtml}</td>
+      ${reachTd}
       <td class="col-wrap" style="color:var(--text3)">${esc(r.industry||'—')}</td>
       <td style="color:var(--text3);font-size:12px">${esc(r.sourcing||'—')}</td>
       <td>${badgeHtml('priority', r.priority, r.id)}</td>
