@@ -143,6 +143,11 @@
 
   /* ─── Text / Date Popups ──────────────────────────── */
   #textPopup { position:fixed; z-index:500; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-md); animation:modalIn 0.12s ease; }
+  #movePopup { position:fixed; z-index:500; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-md); width:220px; animation:modalIn 0.12s ease; }
+  .move-opt { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:var(--radius-sm); cursor:pointer; font-size:12px; color:var(--text); transition:background 0.1s; }
+  .move-opt:hover { background:var(--accent-bg); color:var(--accent-t); }
+  .move-opt i { width:14px; text-align:center; color:var(--text3); font-size:12px; }
+  .move-opt:hover i { color:var(--accent-t); }
   #datePopup { position:fixed; z-index:500; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-md); width:224px; animation:modalIn 0.12s ease; }
   .td-date-clk, .td-text-clk { cursor:pointer; }
   .td-date-clk:hover, .td-text-clk:hover { background:#F2F4F8 !important; }
@@ -362,6 +367,12 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Move To Popup -->
+<div id="movePopup" style="display:none">
+  <div class="dp-hdr"><span>Move to</span><button onclick="closeMovePopup()"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="dp-opts" id="moveOpts"></div>
 </div>
 
 <!-- Column Manager Panel -->
@@ -733,7 +744,7 @@ function render() {
   }
   tbody.innerHTML = rows.map(r => {
     const cells = visibleCols.map(col => col.custom ? renderCustomCell(col,r) : renderBuiltinMainCell(col,r));
-    cells.push(`<td><div class="action-cell"><button class="icon-btn" onclick="openModal(${r.id})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button><button class="icon-btn del" onclick="deleteEntry(${r.id})" title="Delete"><i class="fa-solid fa-trash"></i></button></div></td>`);
+    cells.push(`<td><div class="action-cell"><button class="icon-btn" onclick="openMovePopup(${r.id},this)" title="Move to..."><i class="fa-solid fa-right-left"></i></button><button class="icon-btn" onclick="openModal(${r.id})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button><button class="icon-btn del" onclick="deleteEntry(${r.id})" title="Delete"><i class="fa-solid fa-trash"></i></button></div></td>`);
     return `<tr>${cells.join('')}</tr>`;
   }).join('');
   updateSortIcons();
@@ -764,7 +775,7 @@ function renderRawTable(rawList, search, fPrio) {
   }
   tbody.innerHTML = rows.map(r => {
     const cells = visibleCols.map(col => col.custom ? renderCustomCell(col,r) : renderBuiltinRawCell(col,r));
-    cells.push(`<td><div class="action-cell"><button class="icon-btn" onclick="openRawModal(${r.id})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button><button class="icon-btn del" onclick="deleteRawEntry(${r.id})" title="Delete"><i class="fa-solid fa-trash"></i></button></div></td>`);
+    cells.push(`<td><div class="action-cell"><button class="icon-btn" onclick="openMovePopup(${r.id},this)" title="Move to..."><i class="fa-solid fa-right-left"></i></button><button class="icon-btn" onclick="openRawModal(${r.id})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button><button class="icon-btn del" onclick="deleteRawEntry(${r.id})" title="Delete"><i class="fa-solid fa-trash"></i></button></div></td>`);
     return `<tr>${cells.join('')}</tr>`;
   }).join('');
   updateSortIcons();
@@ -791,17 +802,17 @@ function renderHoldTable(holdList, search) {
   }
   tbody.innerHTML = rows.map(r => {
     const cells = visibleCols.map(col => col.custom ? renderCustomCell(col,r) : renderBuiltinHoldCell(col,r));
-    cells.push(`<td><div class="action-cell"><button class="icon-btn" onclick="openHoldModal(${r.id})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button><button class="icon-btn del" onclick="deleteHoldEntry(${r.id})" title="Delete"><i class="fa-solid fa-trash"></i></button></div></td>`);
+    cells.push(`<td><div class="action-cell"><button class="icon-btn" onclick="openMovePopup(${r.id},this)" title="Move to..."><i class="fa-solid fa-right-left"></i></button><button class="icon-btn" onclick="openHoldModal(${r.id})" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button><button class="icon-btn del" onclick="deleteHoldEntry(${r.id})" title="Delete"><i class="fa-solid fa-trash"></i></button></div></td>`);
     return `<tr>${cells.join('')}</tr>`;
   }).join('');
   updateSortIcons();
 }
 
 // ─── Raw / Hold modal logic ────────────────────────────────────
-function openRawModal(id) {
+function openRawModal(id, prefill) {
   editingId = id != null ? id : -1;
-  const r = id != null ? data.find(d => d.id === id) : null;
-  document.getElementById('rawModalTitle').textContent = r ? 'Edit raw list entry' : 'Add to raw list';
+  const r = prefill || (id != null ? data.find(d => d.id === id) : null);
+  document.getElementById('rawModalTitle').textContent = prefill ? 'Move to raw list' : (r ? 'Edit raw list entry' : 'Add to raw list');
   populateModalSelect('rf_type','type'); populateModalSelect('rf_priority','priority');
   document.getElementById('rf_company').value  = r?.company  || '';
   document.getElementById('rf_type').value     = r?.type     || '';
@@ -823,10 +834,10 @@ function saveRawEntry() {
 }
 function deleteRawEntry(id) { if(!confirm('Remove this entry from the raw list?'))return; deleteEntry_firebase(id); }
 
-function openHoldModal(id) {
+function openHoldModal(id, prefill) {
   editingId = id != null ? id : -1;
-  const r = id != null ? data.find(d => d.id === id) : null;
-  document.getElementById('holdModalTitle').textContent = r ? 'Edit entry' : 'Add to Hold / Reject';
+  const r = prefill || (id != null ? data.find(d => d.id === id) : null);
+  document.getElementById('holdModalTitle').textContent = prefill ? 'Move to Hold / Reject' : (r ? 'Edit entry' : 'Add to Hold / Reject');
   populateModalSelect('hf_type','type');
   document.getElementById('hf_company').value = r?.company || '';
   document.getElementById('hf_type').value    = r?.type    || '';
@@ -883,12 +894,12 @@ function switchTab(el) {
 function sortBy(key) { if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=1;} render(); }
 
 // ─── Main Modal ────────────────────────────────────────────────
-function openModal(id) {
+function openModal(id, prefill) {
   if (currentTab==='rawlist'    && id==null) { openRawModal(null);  return; }
   if (currentTab==='holdreject' && id==null) { openHoldModal(null); return; }
   editingId=id!=null?id:-1;
-  const r=id!=null?data.find(d=>d.id===id):null;
-  document.getElementById('modalTitle').textContent=r?'Edit entry':'Add prospect';
+  const r=prefill || (id!=null?data.find(d=>d.id===id):null);
+  document.getElementById('modalTitle').textContent=prefill?'Move to pipeline':(r?'Edit entry':'Add prospect');
   populateModalSelect('f_type','type'); populateModalSelect('f_status','status'); populateModalSelect('f_priority','priority');
   document.getElementById('f_company').value  = r?.company  || '';
   document.getElementById('f_pic').value      = r?.pic      || '';
@@ -1071,6 +1082,49 @@ function confirmDpAdd() {
   fieldOptions[field].push({label,bg,color}); saveOptions(); renderDpOpts();
 }
 
+// ─── Move Between Tabs ─────────────────────────────────────────
+const MOVE_TARGETS = {
+  main: { label:'Prospects / Clients & Partners', icon:'fa-chart-line', open:openModal },
+  raw:  { label:'Raw List',                        icon:'fa-list',       open:openRawModal },
+  hold: { label:'Hold or Reject',                   icon:'fa-ban',        open:openHoldModal },
+};
+let moveState = { id:null };
+function rowTableKey(r) { return r._raw ? 'raw' : r._hold ? 'hold' : 'main'; }
+function openMovePopup(id, triggerEl) {
+  closeMovePopup(); moveState = { id };
+  const r = data.find(d => d.id === id); if (!r) return;
+  const from = rowTableKey(r);
+  const targets = Object.keys(MOVE_TARGETS).filter(tk => tk !== from);
+  document.getElementById('moveOpts').innerHTML = targets.map(tk => {
+    const t = MOVE_TARGETS[tk];
+    return `<div class="move-opt" data-move-tk="${tk}"><i class="fa-solid ${t.icon}"></i>${esc(t.label)}</div>`;
+  }).join('');
+  const popup = document.getElementById('movePopup');
+  popup.style.display = 'block';
+  const rect = triggerEl.getBoundingClientRect();
+  let top = rect.bottom + 6, left = rect.left;
+  if (left + 220 > window.innerWidth - 8) left = window.innerWidth - 228;
+  if (top + 120 > window.innerHeight - 8) top = rect.top - 6 - (popup.offsetHeight || 100);
+  popup.style.top = Math.max(8, top) + 'px'; popup.style.left = Math.max(8, left) + 'px';
+  setTimeout(() => document.addEventListener('click', moveOutsideClick), 0);
+}
+function moveOutsideClick(e) { if (!document.getElementById('movePopup').contains(e.target)) closeMovePopup(); }
+function closeMovePopup() { document.getElementById('movePopup').style.display = 'none'; document.removeEventListener('click', moveOutsideClick); moveState = { id:null }; }
+function buildMovePrefill(r, targetTk) {
+  const cols = colConfig[targetTk] || BUILTIN_COLS[targetTk];
+  const prefill = {};
+  cols.forEach(col => { if (r[col.key] !== undefined && r[col.key] !== '') prefill[col.key] = r[col.key]; });
+  return prefill;
+}
+document.getElementById('movePopup').addEventListener('click', e => {
+  const el = e.target.closest('[data-move-tk]'); if (!el) return;
+  const tk = el.dataset.moveTk;
+  const r = data.find(d => d.id === moveState.id); if (!r) return;
+  const prefill = buildMovePrefill(r, tk);
+  closeMovePopup();
+  MOVE_TARGETS[tk].open(r.id, prefill);
+});
+
 // ─── Column Manager ────────────────────────────────────────────
 function openColMgr() {
   document.getElementById('colMgrOverlay').style.display='flex';
@@ -1215,7 +1269,7 @@ function onResizeUp(e) {
 
 // ─── Keyboard ──────────────────────────────────────────────────
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeModal();closeNoteModal();closeRawModal();closeHoldModal();closeDpPopup();closeDatePopup();closeTextPopup();closeColMgr();}
+  if(e.key==='Escape'){closeModal();closeNoteModal();closeRawModal();closeHoldModal();closeDpPopup();closeDatePopup();closeTextPopup();closeColMgr();closeMovePopup();}
 });
 
 // ─── Listeners ─────────────────────────────────────────────────
@@ -1245,6 +1299,7 @@ window.openColMgr=openColMgr; window.closeColMgr=closeColMgr;
 window.toggleColVis=toggleColVis; window.startColRename=startColRename; window.setColWidth=setColWidth;
 window.deleteCustomCol=deleteCustomCol; window.showAddColForm=showAddColForm; window.cancelAddCol=cancelAddCol; window.confirmAddCol=confirmAddCol;
 window.startResize=startResize;
+window.openMovePopup=openMovePopup; window.closeMovePopup=closeMovePopup;
 
 // ─── Init ──────────────────────────────────────────────────────
 loadOptions();
